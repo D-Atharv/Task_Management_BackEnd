@@ -3,6 +3,7 @@ import env from '../config/environment'
 
 interface JwtPayload {
     id: string;
+    email:string;
   }
 
 export const generateAuthToken = (userId: string,email:string): string => {
