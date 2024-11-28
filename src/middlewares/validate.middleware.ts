@@ -25,3 +25,11 @@ export const validateRequest = (req: Request, res: Response, next: NextFunction)
 
     next();
 }
+
+export const validateTask = [
+    body('title').notEmpty().withMessage('Title is required'),
+    body('priority').isInt({ min: 1, max: 5 }).withMessage('Priority must be between 1 and 5'),
+    body('status').isIn(['pending', 'finished']).withMessage('Status must be either "pending" or "finished"'),
+    body('startTime').isISO8601().withMessage('Start time must be a valid ISO 8601 date'),
+    body('endTime').optional().isISO8601().withMessage('End time must be a valid ISO 8601 date'),
+  ];
