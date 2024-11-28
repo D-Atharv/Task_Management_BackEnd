@@ -95,3 +95,61 @@ export const deleteTaskController = async (req: Request, res: Response): Promise
         res.status(500).json({ message: 'Error deleting task' });
     }
 };
+
+export const getTaskStatsController = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.id;
+
+        const tasks = await prisma.task.findMany({ where: { userId } });
+
+        const totalTasks = tasks.length;
+        const completedTasks = tasks.filter(task => task.status === 'finished').length;
+        const pendingTasks = tasks.filter(task => task.status === 'pending').length;
+
+        const completedPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+        const pendingPercentage = totalTasks > 0 ? (pendingTasks / totalTasks) * 100 : 0;
+
+        const now = new Date().getTime();
+
+        let timeLapsed = 0;
+        let estimatedTimeLeft = 0;
+        let totalCompletionTime = 0;
+        let completedTaskCount = 0;
+
+        tasks.forEach(task => {
+            const taskStartTime = new Date(task.startTime).getTime();
+
+            if (task.status === 'pending') {
+                timeLapsed += Math.max(now - taskStartTime, 0);
+
+                if (task.endTime) {
+                    const taskEndTime = new Date(task.endTime).getTime();
+                    estimatedTimeLeft += Math.max(taskEndTime - now, 0);
+                }
+            } else if (task.status === 'finished' && task.endTime) {
+                const taskEndTime = new Date(task.endTime).getTime();
+                totalCompletionTime += taskEndTime - taskStartTime;
+                completedTaskCount++;
+            }
+        });
+
+        timeLapsed /= 1000 * 60 * 60;
+        estimatedTimeLeft /= 1000 * 60 * 60;
+
+        const avgCompletionTime = completedTaskCount > 0
+            ? (totalCompletionTime / completedTaskCount) / (1000 * 60 * 60)
+            : 0;
+
+        res.status(200).json({
+            totalTasks,
+            completedPercentage,
+            pendingPercentage,
+            timeLapsed: timeLapsed.toFixed(2),
+            estimatedTimeLeft: estimatedTimeLeft.toFixed(2),
+            avgCompletionTime: avgCompletionTime.toFixed(2),
+        });
+    } catch (err) {
+        console.error('Error fetching task stats:', err);
+        res.status(500).json({ message: 'Error fetching task statistics' });
+    }
+};
