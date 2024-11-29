@@ -3,6 +3,10 @@ import { comparePassword, hashPassword } from '../utils/helpers';
 import { prisma } from '../config/prisma';
 import { generateAuthToken } from '../utils/tokenUtils';
 
+export interface RequestWithUser extends Request {
+    user?: any;
+  }
+
 export const signUpController = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
@@ -70,7 +74,7 @@ export const loginController = async (req: Request, res: Response): Promise<void
 };
 
 
-export const getCurrentUserController = async (req: Request, res: Response): Promise<void> => {
+export const getCurrentUserController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const userId = req.user?.id;
 

@@ -1,16 +1,22 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 
-export const createTaskController = async (req: Request, res: Response): Promise<void> => {
+export interface RequestWithUser extends Request {
+    user?: any;
+  }
+export const createTaskController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const { title, startTime, endTime, priority, status } = req.body;
         const userId = req.user!.id;
 
+        const startTimeISO = new Date(startTime).toISOString(); 
+        const endTimeISO = endTime ? new Date(endTime).toISOString() : null;
+
         const newTask = await prisma.task.create({
             data: {
                 title,
-                startTime,
-                endTime,
+                startTime : startTimeISO,
+                endTime : endTimeISO,
                 priority,
                 status,
                 userId,
@@ -25,7 +31,7 @@ export const createTaskController = async (req: Request, res: Response): Promise
 };
 
 
-export const getAllTasksController = async (req: Request, res: Response): Promise<void> => {
+export const getAllTasksController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const userId = req.user!.id;
 
@@ -40,7 +46,7 @@ export const getAllTasksController = async (req: Request, res: Response): Promis
     }
 };
 
-export const updateTaskController = async (req: Request, res: Response): Promise<void> => {
+export const updateTaskController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         const userId = req.user!.id;
@@ -72,7 +78,7 @@ export const updateTaskController = async (req: Request, res: Response): Promise
     }
 };
 
-export const deleteTaskController = async (req: Request, res: Response): Promise<void> => {
+export const deleteTaskController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         const userId = req.user!.id;
@@ -96,7 +102,7 @@ export const deleteTaskController = async (req: Request, res: Response): Promise
     }
 };
 
-export const getTaskStatsController = async (req: Request, res: Response): Promise<void> => {
+export const getTaskStatsController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const userId = req.user!.id;
 
