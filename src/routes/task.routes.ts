@@ -7,9 +7,9 @@ const router = Router();
 
 router
     .post('/create', protect, validateRequest, createTaskController)
-    .get('/tasks', protect, getAllTasksController)
-    .put('/tasks/:id', protect, validateRequest, updateTaskController)
-    .delete('/tasks/:id', protect, deleteTaskController)
+    .get('/getAll', protect, getAllTasksController)
+    .put('/:id', protect, validateRequest, updateTaskController)
+    .delete('/:id', protect, deleteTaskController)
     .get('/tasks/stats', protect, getTaskStatsController);
 
 export default router;

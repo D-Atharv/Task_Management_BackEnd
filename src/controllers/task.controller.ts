@@ -3,20 +3,31 @@ import { prisma } from '../config/prisma';
 
 export interface RequestWithUser extends Request {
     user?: any;
-  }
+}
+
+const parseDate = (dateStr: string): string => {
+    const [day, month, year] = dateStr.split('/'); 
+    const formattedDate = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+
+    if (isNaN(formattedDate.getTime())) {
+        throw new Error(`Invalid date format: ${dateStr}`);
+    }
+
+    return formattedDate.toISOString();
+};
 export const createTaskController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const { title, startTime, endTime, priority, status } = req.body;
         const userId = req.user!.id;
 
-        const startTimeISO = new Date(startTime).toISOString(); 
+        const startTimeISO = new Date(startTime).toISOString();
         const endTimeISO = endTime ? new Date(endTime).toISOString() : null;
 
         const newTask = await prisma.task.create({
             data: {
                 title,
-                startTime : startTimeISO,
-                endTime : endTimeISO,
+                startTime: startTimeISO,
+                endTime: endTimeISO,
                 priority,
                 status,
                 userId,
@@ -57,15 +68,25 @@ export const updateTaskController = async (req: RequestWithUser, res: Response):
         });
 
         if (!task || task.userId !== userId) {
-            res.status(404).json({ message: 'Task not found or not authorized to update' });
+             res.status(404).json({ message: 'Task not found or not authorized to update' });
+        }
+
+        let formattedStartTime = startTime;
+        let formattedEndTime = endTime;
+
+        if (startTime) {
+            formattedStartTime = parseDate(startTime); 
+        }
+        if (endTime) {
+            formattedEndTime = parseDate(endTime); 
         }
 
         const updatedTask = await prisma.task.update({
             where: { id },
             data: {
                 title,
-                startTime,
-                endTime,
+                startTime: formattedStartTime,
+                endTime: formattedEndTime,
                 priority,
                 status,
             },
@@ -77,7 +98,6 @@ export const updateTaskController = async (req: RequestWithUser, res: Response):
         res.status(500).json({ message: 'Error updating task' });
     }
 };
-
 export const deleteTaskController = async (req: RequestWithUser, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
